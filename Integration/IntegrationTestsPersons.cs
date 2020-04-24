@@ -15,12 +15,18 @@ using Newtonsoft.Json;
 // WhoIsMyGDaddy.API/Domain/Persistence/Contexts 
 using WhoIsMyGDaddy.API.Domain.Persistence.Contexts;
 using WhoIsMyGDaddy.API.Domain.Models;
+using WhoIsMyGDaddy.API.Domain.Services;
+using WhoIsMyGDaddy.Tests.Integration;
 
 public class IntegrationTestsPersons {
     private readonly HttpClient _client;
     private readonly AppDbContext _context;
 
+    private readonly IPersonService _personService;
+
     public IntegrationTestsPersons() {
+
+        _personService  = new PersonServiceFake();
 
         var configuration = new ConfigurationBuilder()
                                 // .SetBasePath(Path.GetFullPath(@"../../WhoIsMyGDaddy.API"))
@@ -41,6 +47,45 @@ public class IntegrationTestsPersons {
         this._client = server.CreateClient();
 
     }
+
+    [Fact]
+    public async Task ListAsyncPass() {
+        var personList = Persons.Select(p => new Person {
+                Id = Convert.ToInt32(p[0]),
+                Name = p[1].ToString(),
+                Surname = p[2].ToString(),
+                FatherId = Convert.ToInt32(p[3]),
+                MotherId = Convert.ToInt32(p[4]),
+                BirthDate = (DateTime)p[5],
+                IdentityNumber = p[6].ToString()
+            });
+
+        var persons = await _personService.ListAsync();
+
+        Assert.Equal(persons.ToList().Count, personList.ToList().Count);
+    }
+
+    [Fact]
+    public async Task ListAsyncJson() {
+        
+         var personList = Persons.Select(p => new Person {
+                Id = Convert.ToInt32(p[0]),
+                Name = p[1].ToString(),
+                Surname = p[2].ToString(),
+                FatherId = Convert.ToInt32(p[3]),
+                MotherId = Convert.ToInt32(p[4]),
+                BirthDate = (DateTime)p[5],
+                IdentityNumber = p[6].ToString()
+            });
+
+        var persons = await _personService.ListAsync();
+
+        var obj1Str = JsonConvert.SerializeObject(persons);
+        var obj2Str = JsonConvert.SerializeObject(personList);
+
+        Assert.True(obj1Str.Equals(obj2Str));
+    }
+
 
 
     [Fact]
@@ -84,7 +129,7 @@ public class IntegrationTestsPersons {
 
     }
 
-    
+
     public static IEnumerable<object[]> Persons =>
         new List<object[]>
         {
