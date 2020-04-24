@@ -68,7 +68,7 @@ public class IntegrationTestsPersons {
     [Fact]
     public async Task ListAsyncJson() {
         
-         var personList = Persons.Select(p => new Person {
+        var personList = Persons.Select(p => new Person {
                 Id = Convert.ToInt32(p[0]),
                 Name = p[1].ToString(),
                 Surname = p[2].ToString(),
@@ -86,19 +86,38 @@ public class IntegrationTestsPersons {
         Assert.True(obj1Str.Equals(obj2Str));
     }
 
+    [Theory]
+    [InlineData("5001185555081")]
+    [InlineData("6002185555081")]
+     public async Task ListAsyncByIdPass(string id) {
 
+        var personList = Persons.Select(p => new Person {
+                Id = Convert.ToInt32(p[0]),
+                Name = p[1].ToString(),
+                Surname = p[2].ToString(),
+                FatherId = Convert.ToInt32(p[3]),
+                MotherId = Convert.ToInt32(p[4]),
+                BirthDate = (DateTime)p[5],
+                IdentityNumber = p[6].ToString()
+            });
+
+        var parent = personList.First(p => p.IdentityNumber == id);
+
+        var descendants = await _personService.GetAllListAsync(id);
+        
+        var expected = personList.Where(p => p.MotherId == parent.Id || p.FatherId == parent.Id);
+
+        var obj1Str = JsonConvert.SerializeObject(descendants);
+        var obj2Str = JsonConvert.SerializeObject(expected);
+
+        Assert.Equal(obj1Str, obj2Str);
+
+
+    }
 
     [Fact]
     public async Task InsertAndGetPersons(){
 
-        // var person = new Person { 
-        //     Id = id, Name = name, Surname = surname, 
-        //     FatherId = fatherId, MotherId = motherid, BirthDate = birthDate, IdentityNumber = identityNumber 
-        // };
-
-        // _context.Persons.Add(person);
-
-        // {1001, "Tshepiso", "Mogapi", 0, 0, new DateTime(1950, 1, 18),"5001185555081"}
         var personList = Persons.Select(p => new Person {
             Id = Convert.ToInt32(p[0]),
             Name = p[1].ToString(),

@@ -45,9 +45,13 @@ namespace WhoIsMyGDaddy.Tests.Integration {
             throw new System.NotImplementedException();
         }
 
-        public Task<IEnumerable<Person>> GetAllListAsync(string id)
+        public async Task<IEnumerable<Person>> GetAllListAsync(string id)
         {
-            throw new System.NotImplementedException();
+            await Task.Delay(1000);
+
+            var person = _personList.Find(p => p.IdentityNumber == id);
+
+            return _personList.FindAll(p => p.MotherId == person.Id || p.FatherId == person.Id);
         }
 
         public async Task<IEnumerable<Person>> ListAsync()
