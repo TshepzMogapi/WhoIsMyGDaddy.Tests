@@ -40,12 +40,12 @@ namespace WhoIsMyGDaddy.Tests.Integration {
             };
 
         }
-        public Task<IEnumerable<Person>> Get(string id)
+        public Task<IEnumerable<Person>> GetAncestorByIdAsync(string id)
         {
             throw new System.NotImplementedException();
         }
 
-        public async Task<IEnumerable<Person>> GetAllListAsync(string id)
+        public async Task<IEnumerable<Person>> GetDescendantsAsync(string id)
         {
             await Task.Delay(1000);
 

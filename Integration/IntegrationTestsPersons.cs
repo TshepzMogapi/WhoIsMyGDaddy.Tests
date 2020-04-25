@@ -17,16 +17,18 @@ using WhoIsMyGDaddy.API.Domain.Persistence.Contexts;
 using WhoIsMyGDaddy.API.Domain.Models;
 using WhoIsMyGDaddy.API.Domain.Services;
 using WhoIsMyGDaddy.Tests.Integration;
+using WhoIsMyGDaddy.API.Domain.Repositories;
+using WhoIsMyGDaddy.API.Persistence.Repositories;
+using WhoIsMyGDaddy.API.Services;
+using Microsoft.EntityFrameworkCore;
 
 public class IntegrationTestsPersons {
     private readonly HttpClient _client;
     private readonly AppDbContext _context;
 
-    private readonly IPersonService _personService;
+    // private List<Person> personList = new List<Person>();
 
     public IntegrationTestsPersons() {
-
-        _personService  = new PersonServiceFake();
 
         var configuration = new ConfigurationBuilder()
                                 // .SetBasePath(Path.GetFullPath(@"../../WhoIsMyGDaddy.API"))
@@ -47,76 +49,9 @@ public class IntegrationTestsPersons {
         this._client = server.CreateClient();
 
     }
-
+    
     [Fact]
-    public async Task ListAsyncPass() {
-        var personList = Persons.Select(p => new Person {
-                Id = Convert.ToInt32(p[0]),
-                Name = p[1].ToString(),
-                Surname = p[2].ToString(),
-                FatherId = Convert.ToInt32(p[3]),
-                MotherId = Convert.ToInt32(p[4]),
-                BirthDate = (DateTime)p[5],
-                IdentityNumber = p[6].ToString()
-            });
-
-        var persons = await _personService.ListAsync();
-
-        Assert.Equal(persons.ToList().Count, personList.ToList().Count);
-    }
-
-    [Fact]
-    public async Task ListAsyncJson() {
-        
-        var personList = Persons.Select(p => new Person {
-                Id = Convert.ToInt32(p[0]),
-                Name = p[1].ToString(),
-                Surname = p[2].ToString(),
-                FatherId = Convert.ToInt32(p[3]),
-                MotherId = Convert.ToInt32(p[4]),
-                BirthDate = (DateTime)p[5],
-                IdentityNumber = p[6].ToString()
-            });
-
-        var persons = await _personService.ListAsync();
-
-        var obj1Str = JsonConvert.SerializeObject(persons);
-        var obj2Str = JsonConvert.SerializeObject(personList);
-
-        Assert.True(obj1Str.Equals(obj2Str));
-    }
-
-    [Theory]
-    [InlineData("5001185555081")]
-    [InlineData("6002185555081")]
-     public async Task ListAsyncByIdPass(string id) {
-
-        var personList = Persons.Select(p => new Person {
-                Id = Convert.ToInt32(p[0]),
-                Name = p[1].ToString(),
-                Surname = p[2].ToString(),
-                FatherId = Convert.ToInt32(p[3]),
-                MotherId = Convert.ToInt32(p[4]),
-                BirthDate = (DateTime)p[5],
-                IdentityNumber = p[6].ToString()
-            });
-
-        var parent = personList.First(p => p.IdentityNumber == id);
-
-        var descendants = await _personService.GetAllListAsync(id);
-        
-        var expected = personList.Where(p => p.MotherId == parent.Id || p.FatherId == parent.Id);
-
-        var obj1Str = JsonConvert.SerializeObject(descendants);
-        var obj2Str = JsonConvert.SerializeObject(expected);
-
-        Assert.Equal(obj1Str, obj2Str);
-
-
-    }
-
-    [Fact]
-    public async Task InsertAndGetPersons(){
+    public async Task InsertAndGetAllPersons(){
 
         var personList = Persons.Select(p => new Person {
             Id = Convert.ToInt32(p[0]),
@@ -126,7 +61,7 @@ public class IntegrationTestsPersons {
             MotherId = Convert.ToInt32(p[4]),
             BirthDate = (DateTime)p[5],
             IdentityNumber = p[6].ToString()
-        });
+        }).ToList();
 
         _context.Persons.AddRange(personList);
 
@@ -134,11 +69,10 @@ public class IntegrationTestsPersons {
 
         var response = await _client.GetAsync($"/api/persons");
 
-        Console.WriteLine(response.Content);
-
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var jsonResponse = await response.Content.ReadAsStringAsync();
+
 
         // var personResponse = JsonConvert.DeserializeObject<List<Person>>(jsonResponse);
 
@@ -147,8 +81,7 @@ public class IntegrationTestsPersons {
         // Assert.Equal(person.Name, person.Name);
 
     }
-
-
+   
     public static IEnumerable<object[]> Persons =>
         new List<object[]>
         {
