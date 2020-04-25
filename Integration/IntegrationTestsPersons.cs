@@ -2,32 +2,19 @@ using System.Net.Http;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Xunit;
 using WhoIsMyGDaddy.API;
-using Newtonsoft.Json;
-// WhoIsMyGDaddy.API/Domain/Persistence/Contexts 
 using WhoIsMyGDaddy.API.Domain.Persistence.Contexts;
 using WhoIsMyGDaddy.API.Domain.Models;
-using WhoIsMyGDaddy.API.Domain.Services;
-using WhoIsMyGDaddy.Tests.Integration;
-using WhoIsMyGDaddy.API.Domain.Repositories;
-using WhoIsMyGDaddy.API.Persistence.Repositories;
-using WhoIsMyGDaddy.API.Services;
-using Microsoft.EntityFrameworkCore;
 
 public class IntegrationTestsPersons {
     private readonly HttpClient _client;
     private readonly AppDbContext _context;
-
-    // private List<Person> personList = new List<Person>();
-
     public IntegrationTestsPersons() {
 
         var configuration = new ConfigurationBuilder()
@@ -50,7 +37,6 @@ public class IntegrationTestsPersons {
 
     }
     
-
     [Fact]
     public async Task InsertAndGetAllPersons(){
 
@@ -81,122 +67,6 @@ public class IntegrationTestsPersons {
 
         // Assert.Equal(person.Name, person.Name);
 
-    }
-
-    [Fact]
-    public async Task ListPersonsAsync() {
-
-        // _personRepository = new PersonRepository(this._context);
-
-        IPersonRepository _personTestRepository = GetInMemoryPersonRepository(); 
-
-        IPersonService _personTestService  = new PersonService(_personTestRepository);
-
-        var personList = Persons.Select(p => new Person {
-            Id = Convert.ToInt32(p[0]),
-            Name = p[1].ToString(),
-            Surname = p[2].ToString(),
-            FatherId = Convert.ToInt32(p[3]),
-            MotherId = Convert.ToInt32(p[4]),
-            BirthDate = (DateTime)p[5],
-            IdentityNumber = p[6].ToString()
-        }).ToList();
-
-        await _personTestRepository.AddPersonsAsync(personList);
-
-        var persons = await _personTestService.ListAsync();
-
-        var expected = JsonConvert.SerializeObject(persons);
-
-        var actual = JsonConvert.SerializeObject(personList);
-
-        Assert.Equal(expected, actual);
-
-    }
-
-    // [Fact]
-    public async Task GetDescendantsAsync(){
-        
-        IPersonRepository _personTestRepository = GetInMemoryPersonRepository(); 
-
-        IPersonService _personTestService  = new PersonService(_personTestRepository);
-
-        var personList = Persons.Select(p => new Person {
-            Id = Convert.ToInt32(p[0]),
-            Name = p[1].ToString(),
-            Surname = p[2].ToString(),
-            FatherId = Convert.ToInt32(p[3]),
-            MotherId = Convert.ToInt32(p[4]),
-            BirthDate = (DateTime)p[5],
-            IdentityNumber = p[6].ToString()
-        }).ToList();
-
-        await _personTestRepository.AddPersonsAsync(personList);
-
-        var descendants = await _personTestService.GetDescendantsAsync("5001185555081");
-
-        Console.WriteLine(JsonConvert.SerializeObject(descendants));
-
-
-        Assert.Equal(descendants.ToList().Count,3);
-
-    }
-
-    // [Fact]
-    public async Task ListAsyncPass() {
-        var personList = Persons.Select(p => new Person {
-                Id = Convert.ToInt32(p[0]),
-                Name = p[1].ToString(),
-                Surname = p[2].ToString(),
-                FatherId = Convert.ToInt32(p[3]),
-                MotherId = Convert.ToInt32(p[4]),
-                BirthDate = (DateTime)p[5],
-                IdentityNumber = p[6].ToString()
-            });
-
-        // var persons = await _personService.ListAsync();
-
-        Assert.Equal(10,10);
-    }
-
-    // [Fact]
-    public async Task ListAsyncJson() {
-        
-        // var personList = Persons.Select(p => new Person {
-        //         Id = Convert.ToInt32(p[0]),
-        //         Name = p[1].ToString(),
-        //         Surname = p[2].ToString(),
-        //         FatherId = Convert.ToInt32(p[3]),
-        //         MotherId = Convert.ToInt32(p[4]),
-        //         BirthDate = (DateTime)p[5],
-        //         IdentityNumber = p[6].ToString()
-        //     });
-
-        // var persons = await _personService.ListAsync();
-
-        // var obj1Str = JsonConvert.SerializeObject(persons);
-        // var obj2Str = JsonConvert.SerializeObject(personList);
-
-        // Assert.True(obj1Str.Equals(obj2Str));
-    }
-
-    // [Theory]
-    // [InlineData("5001185555081")]
-    // [InlineData("6002185555081")]
-    
-
-    private IPersonRepository GetInMemoryPersonRepository() {
-        DbContextOptions<AppDbContext> options;
-
-        var builder = new DbContextOptionsBuilder<AppDbContext>();
-        builder.UseInMemoryDatabase("TestingDataBase");
-        options = builder.Options;
-
-        AppDbContext personContext = new AppDbContext(options);
-
-        personContext.Database.EnsureDeleted();
-        personContext.Database.EnsureCreated();
-        return new PersonRepository(personContext);
     }
 
     public static IEnumerable<object[]> Persons =>
