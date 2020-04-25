@@ -10,6 +10,7 @@ using WhoIsMyGDaddy.API.Domain.Repositories;
 using WhoIsMyGDaddy.API.Domain.Services;
 using WhoIsMyGDaddy.API.Persistence.Repositories;
 using WhoIsMyGDaddy.API.Services;
+using Microsoft.Extensions.Configuration;
 using Xunit;
 
 namespace Tests.Unit
@@ -18,8 +19,6 @@ namespace Tests.Unit
     {
         [Fact]
         public async Task ListPersonsAsync() {
-
-            // _personRepository = new PersonRepository(this._context);
 
             IPersonRepository _personTestRepository = GetInMemoryPersonRepository(); 
 
@@ -46,13 +45,51 @@ namespace Tests.Unit
             Assert.Equal(expected, actual);
 
         }
+       
 
+        [Theory]
+        [InlineData("5001185555081", 9)]
+        [InlineData("9608185555081", 3)]
+        [InlineData("8404185555081", 5)]
+        public async Task GetDescendantsAsync(string identityNumber, int actualDescendants){
+
+            IPersonRepository _personTestRepository = GetInMemoryPersonRepository(); 
+
+            IPersonService _personTestService  = new PersonService(_personTestRepository);
+
+            var descendants = await _personTestService.GetDescendantsAsync(identityNumber);
+
+
+            Assert.Equal(descendants.ToList().Count,actualDescendants);
+
+        }
+
+
+        [Theory]
+        [InlineData("8404185555081", 2, "Tshepiso")]
+        [InlineData("9608185555081", 3, "Tshepiso")]
+        public async Task GetAncestorsAsync(string identityNumber, int actualAncestors,string parentAncestorName){
+
+            IPersonRepository _personTestRepository = GetInMemoryPersonRepository(); 
+
+            IPersonService _personTestService  = new PersonService(_personTestRepository);
+
+            var ancestors = await _personTestService.GetAncestorByIdAsync(identityNumber);
+
+            Assert.Equal(ancestors.ToList().Count,actualAncestors);
+
+            var earlyAncestor = ancestors.OrderBy(p => p.BirthDate).First();
+
+            Assert.Equal(earlyAncestor.Name , parentAncestorName);
+
+        }
 
         private IPersonRepository GetInMemoryPersonRepository() {
             DbContextOptions<AppDbContext> options;
 
             var builder = new DbContextOptionsBuilder<AppDbContext>();
-            builder.UseInMemoryDatabase("TestingDataBase");
+            // builder.UseInMemoryDatabase("TestingDataBase");
+            builder.UseSqlServer("Server=localhost; Database=WhoIsMyGDaddyTestsDb;User ID=sa;Password=<Password1234>;");
             options = builder.Options;
 
             AppDbContext personContext = new AppDbContext(options);
